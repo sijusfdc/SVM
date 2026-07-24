@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Observatory — Nights Above the Cloud Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,ital@9..144,300..700,0..1&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:       #0a0d18;
+    --void-panel: #121729;
+    --void-line:  #232a45;
+    --moonlight:  #cbd6ea;
+    --moonlight-dim: #7f8bab;
+    --starlight:  #e8b84b;
+    --starlight-dim: #a98737;
+    --ember:      #d46a3c;
+    --violet:     #4a4570;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--moonlight);
+    font-family:'Work Sans',sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--starlight);color:var(--void);}
+  a{color:inherit;text-decoration:none;}
+
+  .display{font-family:'Fraunces',serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--starlight);
+    outline-offset:3px;
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:28px 6vw;
+    mix-blend-mode:normal;
+  }
+  .brand{
+    font-family:'Fraunces',serif; font-weight:500; font-size:1.05rem;
+    letter-spacing:0.04em;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand-mark{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--starlight);
+    box-shadow:0 0 12px 2px rgba(232,184,75,0.7);
+  }
+  .nav-links{display:flex; gap:2.4rem; font-size:0.82rem; letter-spacing:0.03em;}
+  .nav-links a{opacity:0.75; transition:opacity .3s ease;}
+  .nav-links a:hover{opacity:1;}
+  @media (max-width:720px){ .nav-links{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    height:100svh;
+    min-height:640px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:0 6vw;
+  }
+  #stars{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hero-veil{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% 40%, rgba(10,13,24,0) 0%, rgba(10,13,24,0.55) 68%, rgba(10,13,24,0.95) 100%);
+    pointer-events:none;
+  }
+  .hero-content{position:relative; z-index:2; max-width:880px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.72rem; letter-spacing:0.22em; text-transform:uppercase;
+    color:var(--starlight-dim);
+    margin-bottom:1.6rem;
+  }
+  .hero h1{
+    font-size:clamp(2.6rem, 7vw, 5.4rem);
+    font-weight:400;
+    line-height:1.03;
+    letter-spacing:-0.01em;
+  }
+  .hero h1 em{
+    font-style:italic; font-weight:300; color:var(--moonlight-dim);
+  }
+  .hero p{
+    margin:1.8rem auto 0;
+    max-width:520px;
+    font-size:1.05rem;
+    line-height:1.65;
+    color:var(--moonlight-dim);
+  }
+  .hero-actions{
+    margin-top:2.6rem;
+    display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;
+  }
+  .btn{
+    padding:0.85rem 1.8rem;
+    border-radius:2px;
+    font-size:0.82rem;
+    letter-spacing:0.04em;
+    border:1px solid var(--void-line);
+    transition:all .35s ease;
+    display:inline-block;
+  }
+  .btn-primary{
+    background:var(--starlight); color:var(--void); border-color:var(--starlight);
+    font-weight:500;
+  }
+  .btn-primary:hover{background:#f4c968; transform:translateY(-1px);}
+  .btn-ghost{color:var(--moonlight); border-color:var(--void-line);}
+  .btn-ghost:hover{border-color:var(--moonlight-dim); background:rgba(255,255,255,0.03);}
+
+  .scroll-cue{
+    position:absolute; bottom:2.4rem; left:50%; transform:translateX(-50%);
+    z-index:2;
+    font-family:'JetBrains Mono',monospace; font-size:0.68rem;
+    color:var(--moonlight-dim); letter-spacing:0.15em;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .scroll-cue::after{
+    content:"";
+    width:1px; height:34px;
+    background:linear-gradient(var(--moonlight-dim), transparent);
+    animation:pulse-line 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-line{
+    0%,100%{opacity:0.25;} 50%{opacity:0.9;}
+  }
+
+  /* ---------- SKY READOUT ---------- */
+  .readout-wrap{padding:0 6vw; margin-top:-1px;}
+  .readout{
+    max-width:1180px; margin:0 auto;
+    transform:translateY(-60px);
+    background:var(--void-panel);
+    border:1px solid var(--void-line);
+    border-radius:3px;
+    padding:2rem clamp(1.2rem,3vw,2.6rem);
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:1.6rem 2rem;
+    position:relative; z-index:3;
+  }
+  .readout-item .label{
+    font-family:'JetBrains Mono',monospace; font-size:0.65rem;
+    letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--moonlight-dim); margin-bottom:0.5rem;
+  }
+  .readout-item .value{
+    font-family:'JetBrains Mono',monospace; font-size:1.28rem;
+    color:var(--starlight); font-weight:500;
+  }
+  .readout-item .sub{
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+    color:var(--moonlight-dim); margin-top:0.3rem;
+  }
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:8rem 6vw;}
+  .section-inner{max-width:1180px; margin:0 auto;}
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:2rem; margin-bottom:3.4rem; flex-wrap:wrap;
+  }
+  .section-head .eyebrow{margin-bottom:0.9rem;}
+  .section-head h2{
+    font-size:clamp(1.9rem,3.4vw,2.7rem);
+    font-weight:400; letter-spacing:-0.01em; max-width:560px;
+  }
+  .section-head p{color:var(--moonlight-dim); max-width:340px; font-size:0.95rem; line-height:1.6;}
+
+  /* ---------- ABOUT ---------- */
+  .about{
+    display:grid; grid-template-columns:1fr 1fr; gap:5rem; align-items:center;
+  }
+  @media (max-width:860px){ .about{grid-template-columns:1fr; gap:2.6rem;} }
+  .about-copy p{
+    font-size:1.02rem; line-height:1.85; color:var(--moonlight-dim); margin-bottom:1.3rem;
+  }
+  .about-copy p:first-of-type{color:var(--moonlight); font-size:1.12rem;}
+  .altitude{
+    border-left:1px solid var(--void-line); padding-left:1.8rem;
+    display:flex; flex-direction:column; gap:1.6rem;
+  }
+  .altitude .figure{
+    font-family:'Fraunces',serif; font-size:2.4rem; color:var(--moonlight);
+    line-height:1;
+  }
+  .altitude .figure span{font-size:1rem; color:var(--moonlight-dim); font-family:'Work Sans',sans-serif; margin-left:0.4rem;}
+  .altitude .desc{font-size:0.85rem; color:var(--moonlight-dim); margin-top:0.4rem; line-height:1.5;}
+
+  /* ---------- PROGRAMS ---------- */
+  .programs-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+    background:var(--void-line); border:1px solid var(--void-line);
+  }
+  @media (max-width:900px){ .programs-grid{grid-template-columns:1fr;} }
+  .program-card{
+    background:var(--void); padding:2.6rem 2.2rem;
+    transition:background .4s ease;
+    position:relative;
+  }
+  .program-card:hover{background:var(--void-panel);}
+  .program-card .tag{
+    font-family:'JetBrains Mono',monospace; font-size:0.68rem;
+    color:var(--ember); letter-spacing:0.1em; text-transform:uppercase;
+    margin-bottom:1.2rem; display:block;
+  }
+  .program-card h3{
+    font-family:'Fraunces',serif; font-weight:400; font-size:1.5rem;
+    margin-bottom:0.9rem;
+  }
+  .program-card p{
+    color:var(--moonlight-dim); font-size:0.92rem; line-height:1.7; margin-bottom:1.6rem;
+  }
+  .program-card .meta{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'JetBrains Mono',monospace; font-size:0.75rem;
+    color:var(--moonlight-dim); border-top:1px solid var(--void-line); padding-top:1.1rem;
+  }
+  .program-card .meta .price{color:var(--starlight);}
+
+  /* ---------- FIELD NOTES ---------- */
+  .notes{background:var(--void-panel); border-top:1px solid var(--void-line); border-bottom:1px solid var(--void-line);}
+  .notes-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:3rem;}
+  @media (max-width:900px){ .notes-grid{grid-template-columns:1fr; gap:2.4rem;} }
+  .note blockquote{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:300;
+    font-size:1.18rem; line-height:1.6; color:var(--moonlight);
+  }
+  .note cite{
+    display:block; margin-top:1.3rem; font-style:normal;
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+    color:var(--moonlight-dim); letter-spacing:0.04em;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    text-align:center; padding-top:9rem; padding-bottom:9rem;
+    position:relative;
+  }
+  .cta h2{
+    font-family:'Fraunces',serif; font-weight:400;
+    font-size:clamp(2rem,4.4vw,3.4rem); max-width:680px; margin:0 auto 2.2rem;
+    line-height:1.15;
+  }
+  .cta h2 em{font-style:italic; color:var(--starlight);}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:3.4rem 6vw 2.6rem;
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:2rem;
+    border-top:1px solid var(--void-line);
+  }
+  footer .coords{
+    font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--moonlight-dim);
+    line-height:1.8;
+  }
+  footer .foot-links{display:flex; gap:1.6rem; font-size:0.82rem;}
+  footer .foot-links a{color:var(--moonlight-dim); transition:color .3s ease;}
+  footer .foot-links a:hover{color:var(--moonlight);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span class="brand-mark"></span>MERIDIAN OBSERVATORY</div>
+  <div class="nav-links">
+    <a href="#about">The Mountain</a>
+    <a href="#programs">Programs</a>
+    <a href="#notes">Field Notes</a>
+    <a href="#visit">Visit</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="stars"></canvas>
+  <div class="hero-veil"></div>
+  <div class="hero-content">
+    <div class="eyebrow">2,940m · above the cloud line</div>
+    <h1 class="display">Nights this dark<br><em>are getting rare.</em></h1>
+    <p>A working observatory on an unlit ridge, open to the public four nights a week. Come look through the same telescopes our astronomers use.</p>
+    <div class="hero-actions">
+      <a href="#visit" class="btn btn-primary">Reserve a night</a>
+      <a href="#about" class="btn btn-ghost">About the site</a>
+    </div>
+  </div>
+  <div class="scroll-cue">SCROLL</div>
+</header>
+
+<div class="readout-wrap">
+  <div class="readout mono" id="readout">
+    <div class="readout-item">
+      <div class="label">Tonight's Moon</div>
+      <div class="value" id="moon-phase">Waxing Crescent</div>
+      <div class="sub" id="moon-illum">14% illuminated</div>
+    </div>
+    <div class="readout-item">
+      <div class="label">Sky Quality</div>
+      <div class="value">21.8 <span style="font-size:0.9rem;color:var(--moonlight-dim)">mag/arcsec²</span></div>
+      <div class="sub">Bortle class 2</div>
+    </div>
+    <div class="readout-item">
+      <div class="label">Visible Tonight</div>
+      <div class="value">Saturn, M31</div>
+      <div class="sub">rises 21:40 local</div>
+    </div>
+    <div class="readout-item">
+      <div class="label">Forecast</div>
+      <div class="value">Clear</div>
+      <div class="sub">seeing: 1.2″ · calm</div>
+    </div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="section-inner about">
+    <div class="about-copy">
+      <p>Meridian sits on a ridge with no town for forty kilometers in any direction. The nearest streetlight is a memory.</p>
+      <p>We built the dome in 1994 for research use, and opened the mountain to visitors a decade later once we realized the sky here was too good to keep to ourselves. The same 0.7m reflector that tracks near-Earth asteroids on weeknights spends clear Saturdays pointed wherever our guests want to look.</p>
+      <p>No shuttle buses, no gift shop lighting. You arrive before dusk, your eyes adjust on the walk up, and by the time the dome opens you're already seeing more stars than most people see in a year.</p>
+    </div>
+    <div class="altitude">
+      <div>
+        <div class="figure">2,940<span>meters</span></div>
+        <div class="desc">Elevation of the observation deck — above roughly 70% of the atmosphere's water vapor.</div>
+      </div>
+      <div>
+        <div class="figure">0.7<span>m aperture</span></div>
+        <div class="desc">The Ritchey–Chrétien reflector, in continuous use since 1994.</div>
+      </div>
+      <div>
+        <div class="figure">4<span>nights / week</span></div>
+        <div class="desc">Open to the public, weather permitting. Research continues the other three.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="programs">
+  <div class="section-inner">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Programs</div>
+        <h2 class="display">Three ways to spend a night on the mountain.</h2>
+      </div>
+      <p>Every session is led by a working astronomer, capped at 12 guests, and cancelled with full refund if the sky doesn't cooperate.</p>
+    </div>
+    <div class="programs-grid">
+      <div class="program-card">
+        <span class="tag">Public Night</span>
+        <h3 class="display">Under the Dome</h3>
+        <p>A guided walk through tonight's sky, then unhurried turns at the main reflector. Bring questions — our astronomers like them.</p>
+        <div class="meta"><span>2.5 hrs · dusk to 22:30</span><span class="price">$68</span></div>
+      </div>
+      <div class="program-card">
+        <span class="tag">Small Group</span>
+        <h3 class="display">Private Viewing</h3>
+        <p>The dome to yourselves for an evening. Choose your targets in advance; we'll build the session around them.</p>
+        <div class="meta"><span>up to 6 guests</span><span class="price">from $420</span></div>
+      </div>
+      <div class="program-card">
+        <span class="tag">Workshop</span>
+        <h3 class="display">Astrophotography</h3>
+        <p>Hands-on instruction on long-exposure imaging through our secondary scope. Cameras provided or bring your own.</p>
+        <div class="meta"><span>2 nights, on-site</span><span class="price">$540</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="notes" class="notes">
+  <div class="section-inner">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Field Notes</div>
+        <h2 class="display">What people say after the drive up.</h2>
+      </div>
+    </div>
+    <div class="notes-grid">
+      <div class="note">
+        <blockquote>"I've seen Saturn in photographs my whole life. Seeing the rings shake slightly with my own pulse through the eyepiece was different."</blockquote>
+        <cite>— Guest, Public Night, October</cite>
+      </div>
+      <div class="note">
+        <blockquote>"Our astronomer let my daughter drive the dome's rotation by hand. She's talked about it for a month."</blockquote>
+        <cite>— Guest, Private Viewing, June</cite>
+      </div>
+      <div class="note">
+        <blockquote>"No phone signal, no ambient light, and somehow that made the two hours feel much longer than two hours — in a good way."</blockquote>
+        <cite>— Guest, Astrophotography Workshop</cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="visit" class="cta">
+  <div class="section-inner">
+    <div class="eyebrow">Reservations</div>
+    <h2 class="display">The sky won't hold this still <em>every night.</em></h2>
+    <div class="hero-actions">
+      <a href="#" class="btn btn-primary">Check tonight's availability</a>
+      <a href="#" class="btn btn-ghost">Download visitor guide</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="coords">
+    MERIDIAN OBSERVATORY<br>
+    36°14′N 105°49′W · 2,940m ASL<br>
+    Gate closes 30 min after posted start time
+  </div>
+  <div class="foot-links">
+    <a href="#about">The Mountain</a>
+    <a href="#programs">Programs</a>
+    <a href="#notes">Field Notes</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  const hero = document.querySelector('.hero');
+  let w, h, stars = [], shooting = [];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize(){
+    w = canvas.width = hero.offsetWidth;
+    h = canvas.height = hero.offsetHeight;
+    const count = Math.floor((w*h)/3800);
+    stars = [];
+    for(let i=0;i<count;i++){
+      stars.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        r: Math.random()*1.3 + 0.3,
+        baseAlpha: Math.random()*0.6 + 0.25,
+        twinkleSpeed: Math.random()*0.015 + 0.004,
+        phase: Math.random()*Math.PI*2
+      });
+    }
+  }
+
+  let mouseX = 0.5, mouseY = 0.5;
+  window.addEventListener('mousemove', (e)=>{
+    const rect = hero.getBoundingClientRect();
+    mouseX = (e.clientX - rect.left) / rect.width;
+    mouseY = (e.clientY - rect.top) / rect.height;
+  });
+
+  function maybeSpawnShooting(){
+    if(reduceMotion) return;
+    if(Math.random() < 0.004 && shooting.length < 2){
+      const startX = Math.random()*w*0.6 + w*0.2;
+      shooting.push({
+        x: startX, y: -10,
+        vx: 4.2, vy: 2.6,
+        life: 1
+      });
+    }
+  }
+
+  let t = 0;
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    const parallax = 10;
+    const offsetX = (mouseX - 0.5) * parallax;
+    const offsetY = (mouseY - 0.5) * parallax;
+
+    stars.forEach(s=>{
+      const alpha = reduceMotion ? s.baseAlpha : s.baseAlpha + Math.sin(t*s.twinkleSpeed + s.phase)*0.25;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(203,214,234,${Math.max(0,alpha)})`;
+      ctx.arc(s.x + offsetX, s.y + offsetY, s.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    maybeSpawnShooting();
+    shooting.forEach(m=>{
+      ctx.save();
+      ctx.strokeStyle = `rgba(232,184,75,${m.life})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(m.x, m.y);
+      ctx.lineTo(m.x - m.vx*14, m.y - m.vy*14);
+      ctx.stroke();
+      ctx.restore();
+      m.x += m.vx; m.y += m.vy; m.life -= 0.012;
+    });
+    shooting = shooting.filter(m=>m.life>0 && m.y < h+20);
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+// ---- moon phase (approx, real calculation) ----
+(function(){
+  function moonPhase(date){
+    const synodic = 29.530588853;
+    const known = new Date(Date.UTC(2000,0,6,18,14));
+    const diffDays = (date - known) / 86400000;
+    let phase = (diffDays % synodic) / synodic;
+    if(phase < 0) phase += 1;
+    return phase;
+  }
+  const names = [
+    [0.02,'New Moon'],[0.24,'Waxing Crescent'],[0.26,'First Quarter'],
+    [0.49,'Waxing Gibbous'],[0.51,'Full Moon'],[0.74,'Waning Gibbous'],
+    [0.76,'Last Quarter'],[0.99,'Waning Crescent'],[1.01,'New Moon']
+  ];
+  const p = moonPhase(new Date());
+  let label = 'Waxing Crescent';
+  for(const [threshold, name] of names){ if(p <= threshold){ label = name; break; } }
+  const illum = Math.round((1 - Math.cos(2*Math.PI*p))/2 * 100);
+  const elLabel = document.getElementById('moon-phase');
+  const elIllum = document.getElementById('moon-illum');
+  if(elLabel) elLabel.textContent = label;
+  if(elIllum) elIllum.textContent = illum + '% illuminated';
+})();
+</script>
+
+</body>
+</html>
